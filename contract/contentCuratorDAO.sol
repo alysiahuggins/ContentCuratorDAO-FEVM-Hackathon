@@ -91,8 +91,18 @@ contract ContentCuratorDAO {
 
     function vote(string memory _postIPFSURL, string memory _postOwner)
         external
+        payable
         onlyDAOMember("Only DAO Members are allowed to vote")
     {
+        //transfer tokens from buyer to seller
+        require(
+          ERC20(daoTokenAddress).transferFrom(
+            msg.sender,
+            address(this),
+            1 ether
+          ),
+          "Transfer of CCD Token from DAO member to contract failed."
+        );
         Post storage post = posts[_postIPFSURL];
         if(!post.exists){
             post = createPost(_postIPFSURL, _postOwner, msg.sender);
@@ -107,8 +117,6 @@ contract ContentCuratorDAO {
     }
 
     
-    
-
     function getDaoMemberVotes()
     external
     view
@@ -146,6 +154,31 @@ contract ContentCuratorDAO {
         return postVotes[postIPFSURL];
     }
 
+
+    function removeVote(string memory _postIPFSURL)
+    external {
+        Post memory post = this.getPosts(_postIPFSURL);
+        address [] memory voters = post.voters;
+        for(uint256 i = 0; i<voters.length; i++){
+            if(voters[i]==msg.sender){
+                post.numVotes--;
+                voters = removeFromAddressArray(voters, i);
+            }
+        }
+
+    }
+
+    function removeFromAddressArray(address [] memory addrArr , uint256 index)
+    internal 
+    returns (address [] memory)
+    {
+        if (index >= addrArr.length) return addrArr;
+
+        for (uint i = index; i<addrArr.length-1; i++){
+            addrArr[i] = addrArr[i+1];
+        }
+        return addrArr;
+    }
 
 
     

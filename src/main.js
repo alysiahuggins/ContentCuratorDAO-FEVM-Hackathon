@@ -13,10 +13,7 @@ import contentCuratorDAOTokenAbi from '../contract/contentCuratorDAOToken.abi.js
 
 const ERC20_DECIMALS = 18
 
-let kit
-const MPContractAddress = "0x634cED1A66D18744D44716A741284118B687b061"
-const cUSDTokenAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1"
-const contentCuratorDAOAddress = "0x66880f93c6a64bed43415D4F01043Bf953D7D726"
+const contentCuratorDAOAddress = "0x1C42cea7a64383e89ced7dAC974963DA2Bd8aF5D"
 const contentCuratorDAOTokenAddress = "0xF188BC880974fcbF9C323D4385060e7E9469CA8a"
 let contract
 let erc20Contract
@@ -34,7 +31,6 @@ ethereum.on('chainChanged', (_chainId) => window.location.reload());
 
 const connectMetamaskWallet = async function () {
     if (window.ethereum) {
-        notification("⚠️ Please approve this DApp to use it.")
         try{
             const chainId = await ethereum.request({ method: 'eth_chainId' });
             if(parseInt(chainId,16)!=filecoinTestnetID){
@@ -42,16 +38,16 @@ const connectMetamaskWallet = async function () {
             }
             
             web3 = new Web3(window.ethereum);
-
+            
             await window.ethereum.enable();
-            notificationOff()
 
             const accounts = await web3.eth.getAccounts()
             defaultAccount = accounts[0];    
             console.log(`accounts ${accounts}`)
 
-            
-
+            walletConnected = true;
+            getDAOTokenBalance();
+            notificationOff();
         } catch (error) {
             notification(`⚠️ ${error}.`)
           }
@@ -187,9 +183,12 @@ const connectMetamaskWallet = async function () {
       setUpContracts()
 
       const accounts = await web3.eth.getAccounts()
-      if(!accounts){
+      console.log(`accounts ${accounts} ${!accounts} ${accounts.length}`)
+      if(!accounts || accounts.length==0){
+        notification("⚠️ Please connect your wallet (on the Filecoin Wallaby Network) to use it.")
+
         // document.getElementById("disconnectButton").style.display="none";
-        document.getElementById("connectButton").style.display="none";
+        document.getElementById("connectButton").style.display="block";
         walletConnected = false;
       }else{
         // document.getElementById("disconnectButton").style.display="block";
@@ -217,7 +216,7 @@ const connectMetamaskWallet = async function () {
     // await getBalance()
     await renderPosts()
     console.log(posts)
-    notificationOff()
+    if(walletConnected) notificationOff()
     setButtonClicks()
 
   });
@@ -225,6 +224,29 @@ const connectMetamaskWallet = async function () {
   function setUpContracts(){
     contract = new web3.eth.Contract(contentCuratorDAOAbi, contentCuratorDAOAddress);
     erc20Contract = new web3.eth.Contract(erc20Abi, contentCuratorDAOTokenAddress)
+  }
+
+   /* Approve token spender */
+   async function approveSpender(_amount) {
+    console.log("toApprove")
+    let amount = await web3.utils.toWei("5");
+    console.log(amount)
+    const result = await erc20Contract.methods
+      .approve(contentCuratorDAOAddress, amount)
+      .send({ from: defaultAccount })
+      console.log(`approved ${result}`)
+    return result
+  }
+
+  /* get token spender allowance */
+  async function checkAllowance(_amount) {
+    console.log("checkAllowance")
+  
+    const result = await erc20Contract.methods
+      .allowance(defaultAccount, contentCuratorDAOAddress)
+      .call()
+    console.log(`allowance ${result}`)
+    return result
   }
 
     /*  Connect Button */
@@ -282,17 +304,7 @@ const connectMetamaskWallet = async function () {
 
  
   
-  /* Approve token spender */
-  async function approve(amount) {
-    const ccdContract = new web3.eth.Contract(erc20Abi, contentCuratorDAOTokenAddress)
-    console.log("toApprove")
   
-    const result = await ccdContract.methods
-      .approve(contentCuratorDAOAddress, amount)
-      .send({ from: defaultAccount })
-      console.log(result)
-    return result
-  }
 
  
 function setButtonClicks(){
@@ -310,7 +322,7 @@ function setButtonClicks(){
       try{
         let walletBalance = await getDAOTokenBalance()
         console.log(walletBalance)
-        if (walletBalance<properties[index].price/properties[index].numShares){
+        if (walletBalance<web3.utils.toWei("1")){
           notification(`You do not have enough CCD to vote`)
           return
         }
@@ -319,16 +331,20 @@ function setButtonClicks(){
       }
       
 
-
-      // notification("⌛ Waiting for payment approval...")
-      // try {
-      //   await approve(properties[index].price)
-      
-      // } catch (error) {
-      //   notification(`⚠️ ${error}.`)
-      // }
-      notification(`⌛ Awaiting vote ...`)
+     
     try {
+      if(await checkAllowance()<1){
+        notification("⌛ Waiting for payment approval...")
+        try {
+          
+          console.log('wait for payment approval')
+          await approveSpender(1)
+        
+        } catch (error) {
+          notification(`⚠️ ${error}.`)
+        }
+     }
+      notification(`⌛ Awaiting vote ...`)
       const result = await contract.methods
         .vote(ipfsURL, owner)
         .send({ from: defaultAccount })
