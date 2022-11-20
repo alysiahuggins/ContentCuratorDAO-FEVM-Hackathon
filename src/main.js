@@ -1,5 +1,4 @@
 import Web3 from 'web3'
-// import { newKitFromWeb3 } from '@celo/contractkit'
 import BigNumber from "bignumber.js"
 import erc20Abi from '../contract/erc20.abi.json'
 import contentCuratorDAOAbi from '../contract/contentCuratorDAO.abi.json'
@@ -25,12 +24,9 @@ let properties = []
 let web3 
 let defaultAccount
 let filecoinTestnetID=31415
-let celoExplorer = "https://alfajores-blockscout.celo-testnet.org/"
 let bgColor = "#edc0e0"
 let walletConnected = false;
 
-// ["Best House","https://thumbor.forbes.com/thumbor/fit-in/900x510/https://www.forbes.com/advisor/wp-content/uploads/2021/08/download-23.jpg","Best house on the block","London, UK"]
-// [300000000000000000000000,0,1000000]
 
 
 ethereum.on('chainChanged', (_chainId) => window.location.reload());
@@ -157,22 +153,7 @@ const connectMetamaskWallet = async function () {
           }>
             Vote
           </a>
-
-
-          <!-- only show update price and cancel buttons if current viewer is the owner and there are no properties sold-->
-          <a class="btn btn-lg btn-outline-dark updatePriceBtn fs-6 p-3" style="${_post.status!=0||viewerIsOwner!=true||_post.sold>0?'display:none':'display:block'}" id=${index
-          }
-              data-bs-toggle="modal"
-              data-bs-target="#updatePriceModal-${
-                index}">
-            Update Property
-          </a>
           
-          <!--a class="btn btn-lg btn-outline-dark houseTokenBtn fs-6 p-3" href= "${celoExplorer}token/${_post.houseTokenAddress}/token-transfers" target="_blank" id=${
-            index} style="${_post.status!=0?'display:none':'display:block'}"
-          >
-            Buy DAO Token to Vote
-          </a-->
         </div>
       </div>
     </div>`
@@ -293,12 +274,12 @@ const connectMetamaskWallet = async function () {
  
   
   /* Approve token spender */
-  async function approve(_price) {
-    const cUSDContract = new web3.eth.Contract(erc20Abi, cUSDTokenAddress)
+  async function approve(amount) {
+    const ccdContract = new web3.eth.Contract(erc20Abi, contentCuratorDAOTokenAddress)
     console.log("toApprove")
   
-    const result = await cUSDContract.methods
-      .approve(MPContractAddress, _price)
+    const result = await ccdContract.methods
+      .approve(contentCuratorDAOAddress, amount)
       .send({ from: defaultAccount })
       console.log(result)
     return result
@@ -356,33 +337,6 @@ function setButtonClicks(){
 })
 }
 
-/* Cancel Sale */
-document.querySelector("#marketplace").addEventListener("click", async (e) => {
-  if (e.target.className.includes("cancelSaleBtn")) {
-    console.log('cancelling sale')
-    const index = e.target.id
-    try{
-      let canBeCancelled =  await contract.methods.canBeCancelled(index).call()
-      
-      if (canBeCancelled){
-        notification(`canelling Sale`)
-
-        const result = await contract.methods
-          .cancelPropertySale(index)
-          .send({ from: defaultAccount })
-        notification(`🎉 You successfully cancelled "${properties[index].name}".`)
-        getProperties()
-        getBalance()
-        return
-      }else{
-        notification(`You cannot cancel this sale.`)
-
-      }
-    } catch (error) {
-      notification(`⚠️ ${error.message}.`)
-    } 
-}
-})
 
 
 
