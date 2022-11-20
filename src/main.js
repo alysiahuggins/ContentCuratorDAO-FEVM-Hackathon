@@ -25,6 +25,7 @@ let web3
 let defaultAccount
 let filecoinTestnetID=31415
 let bgColor = "#edc0e0"
+let hightlightColor = "#FF58EE"
 let walletConnected = false;
 
 
@@ -77,6 +78,14 @@ const connectMetamaskWallet = async function () {
       numVotes: 0,
       status: 0,
       ipfsURL: "ipfs://2",
+    },
+    {
+      image: "https://pbs.twimg.com/media/Fh6qtzYVUAI5aYv?format=jpg&name=large",
+      description: "Just leaving Twitter HQ code review",
+      owner: "Elon Musk",
+      numVotes: 0,
+      status: 0,
+      ipfsURL: "ipfs://3",
     }
   ]
   
@@ -136,19 +145,19 @@ const connectMetamaskWallet = async function () {
         </div>
         </div-->
         <h2 class="card-title fs-4 fw-bold mt-2">${_post.owner}</h2>
-        <p class="card-text mb-4" style="min-height: 82px">
+        <p class="card-text mb-5" style="min-height: 82px">
           ${_post.description}             
         </p>
         
         
-        <p class="card-text mt-4 ">
+        <!--p class="card-text mt-4 ">
           <i class="bi bi-megaphone-fill" ></i>
           <span>${_post.status==0?'More Votes Needed':'Accepted'}</span>
-        </p>
+        </p-->
        
-        <div class="d-grid gap-2">
+        <div class="d-grid gap-2" style="background-color: ${bgColor};" >
           <!-- do not show buy button if property status is not 0 (which means on sale)-->
-          <a class="btn btn-lg btn-outline-dark buyBtn voteBtn fs-6 p-3" style="${_post.status==0?'display:block':'display:none'}" id=${
+          <a class="btn btn-lg btn-outline-dark voteBtn fs-6 p-3" style="${_post.status==0?'display:block':'display:none'}" id=${
             index
           }>
             Vote
@@ -253,21 +262,21 @@ const connectMetamaskWallet = async function () {
 
    
 
-    /*  Disconnect Button */
-    document.querySelector("#disconnectButton").addEventListener("click", async (e) => {
-      const index = e.target.id
-      try{
-        await disconnectMetamaskWallet()
-        walletConnected = false;
+//     /*  Disconnect Button */
+//     document.querySelector("#disconnectButton").addEventListener("click", async (e) => {
+//       const index = e.target.id
+//       try{
+//         await disconnectMetamaskWallet()
+//         walletConnected = false;
 
-        // document.getElementById("disconnectButton").style.display="none";
-        document.getElementById("connectButton").style.display="block";
+//         // document.getElementById("disconnectButton").style.display="none";
+//         document.getElementById("connectButton").style.display="block";
         
-      } catch (error) {
-        notification(`⚠️ ${error.message}.`)
-        walletConnected = true;
-      }
-})
+//       } catch (error) {
+//         notification(`⚠️ ${error.message}.`)
+//         walletConnected = true;
+//       }
+// })
 
 
 
@@ -285,10 +294,7 @@ const connectMetamaskWallet = async function () {
     return result
   }
 
-  /* Vote  Button */
-  $(document).on( 'click', function () { 
-    alert('clicked');
-    });
+ 
 function setButtonClicks(){
 
   document.querySelector("#marketplace").addEventListener("click", async (e) => {

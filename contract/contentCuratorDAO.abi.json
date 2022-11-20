@@ -175,6 +175,19 @@
 				"internalType": "string",
 				"name": "_postIPFSURL",
 				"type": "string"
+			}
+		],
+		"name": "removeVote",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_postIPFSURL",
+				"type": "string"
 			},
 			{
 				"internalType": "string",
